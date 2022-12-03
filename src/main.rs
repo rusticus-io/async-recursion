@@ -7,14 +7,16 @@ fn fibo(n: u64) -> u64 {
     }
 }
 
-use async_recursion::async_recursion;
-#[async_recursion]
-async fn async_fibo(n: u64) -> u64 {
-    match n {
-        0 => 0,
-        1 => 1,
-        _ => async_fibo(n - 1).await + async_fibo(n - 2).await,
-    }
+/// https://rust-lang.github.io/async-book/07_workarounds/04_recursion.html
+use futures::future::{BoxFuture, FutureExt};
+fn async_fibo(n: u64) -> BoxFuture<'static, u64> {
+    async move {
+        match n {
+            0 => 0,
+            1 => 1,
+            _ => async_fibo(n - 1).await + async_fibo(n - 2).await,
+        }
+    }.boxed()
 }
 
 #[tokio::main]
