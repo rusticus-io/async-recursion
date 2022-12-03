@@ -7,6 +7,8 @@ fn fibo(n: u64) -> u64 {
     }
 }
 
+use async_recursion::async_recursion;
+#[async_recursion]
 async fn async_fibo(n: u64) -> u64 {
     match n {
         0 => 0,
@@ -14,26 +16,12 @@ async fn async_fibo(n: u64) -> u64 {
         _ => async_fibo(n - 1).await + async_fibo(n - 2).await,
     }
 }
-/*
-error[E0733]: recursion in an `async fn` requires boxing
-  --> src/main.rs:10:32
-   |
-10 | async fn async_fibo(n: u64) -> u64 {
-   |                                ^^^ recursive `async fn`
-   |
-   = note: a recursive `async fn` must be rewritten to return a boxed `dyn Future`
-   = note: consider using the `async_recursion` crate: https://crates.io/crates/async_recursion
 
-For more information about this error, try `rustc --explain E0733`.
-error: could not compile `fibonacci` due to previous error
- */
-
-fn calculate_sync(n: u64) {
+#[tokio::main]
+async fn main() {
+    let n = 10;
     println!("The fibonacci number of n = {} is {}.", n, fibo(n));
-}
-
-fn main() {
-    calculate_sync(10);
+    println!("The fibonacci number of n = {} is {}.", n, async_fibo(n).await);
 }
 
 #[cfg(test)]
@@ -50,5 +38,16 @@ mod test {
         assert_eq!(fibo(4), 3);
         assert_eq!(fibo(5), 5);
         assert_eq!(fibo(10), 55);
+    }
+
+    #[tokio::test]
+    async fn async_test() {
+        assert_eq!(async_fibo(0).await, 0);
+        assert_eq!(async_fibo(1).await, 1);
+        assert_eq!(async_fibo(2).await, 1);
+        assert_eq!(async_fibo(3).await, 2);
+        assert_eq!(async_fibo(4).await, 3);
+        assert_eq!(async_fibo(5).await, 5);
+        assert_eq!(async_fibo(10).await, 55);
     }
 }
